@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Encoder & Decoder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Text Encoder & Decoder</h1>
+        <p>Enter text below and choose whether to encode (vowels to numbers) or decode (numbers to vowels).</p>
+
+        <div class="text-areas">
+            <textarea id="inputText" placeholder="Enter your text here..." rows="10"></textarea>
+            <textarea id="outputText" placeholder="Result will appear here..." readonly rows="10"></textarea>
+        </div>
+
+        <div class="controls">
+            <div class="radio-group">
+                <input type="radio" id="encodeMode" name="mode" value="encode" checked>
+                <label for="encodeMode">Encode</label>
+                <input type="radio" id="decodeMode" name="mode" value="decode">
+                <label for="decodeMode">Decode</label>
+            </div>
+            <button id="convertBtn">Convert</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
