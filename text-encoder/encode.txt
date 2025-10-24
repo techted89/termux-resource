@@ -1,0 +1,5 @@
+This is a sample text for the encoder.
+It includes vowels of both uppercase and lowercase.
+AEIOU aeiou
+The script should handle all of them correctly.
+Quick brown fox jumps over the lazy dog.
