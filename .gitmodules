@@ -4,3 +4,6 @@
 [submodule "firmware/tools/twrpdtgen"]
 	path = firmware/tools/twrpdtgen
 	url = https://github.com/twrpdtgen/twrpdtgen
+[submodule "firmware/tools/unblob"]
+	path = firmware/tools/unblob
+	url = https://github.com/onekey-sec/unblob
