@@ -34,8 +34,13 @@ main_menu() {
     echo "4. Unmount an image file"
     echo "5. View vbmeta info"
     echo "6. Resign vbmeta"
-    echo "7. Auto-detect image type"
-    echo "8. Exit"
+    echo "7. Create vbmeta"
+    echo "8. Auto-detect image type (magic)"
+    echo "9. Auto-detect image type (blkid)"
+    echo "10. Unpack super.img"
+    echo "11. Read data from file"
+    echo "12. Write data to file"
+    echo "13. Exit"
     echo "----------------------------------------"
     read -p "Enter your choice: " choice
 
@@ -46,10 +51,106 @@ main_menu() {
         4) unmount_menu ;;
         5) view_vbmeta_info_menu ;;
         6) resign_vbmeta_menu ;;
-        7) auto_detect_menu ;;
-        8) exit 0 ;;
+        7) create_vbmeta_menu ;;
+        8) auto_detect_menu ;;
+        9) blkid_menu ;;
+        10) unpack_super_menu ;;
+        11) read_data_menu ;;
+        12) write_data_menu ;;
+        13) exit 0 ;;
         *) main_menu ;;
     esac
+}
+
+write_data_menu() {
+    clear
+    echo "----------------------------------------"
+    echo " Write data to file"
+    echo "----------------------------------------"
+    read -p "Enter the path to the file: " file
+    if [ ! -f "$file" ]; then
+        log "ERROR: File not found: $file"
+        read -p "Press Enter to continue..."
+        main_menu
+        return
+    fi
+    read -p "Enter the offset: " offset
+    read -p "Enter the data in hex (e.g., 414243): " data
+    python3 -c "import sys; f = open('$file', 'rb+'); f.seek($offset); f.write(bytearray.fromhex('$data')); f.close()"
+    log "Wrote successfully."
+    read -p "Press Enter to continue..."
+    main_menu
+}
+
+read_data_menu() {
+    clear
+    echo "----------------------------------------"
+    echo " Read data from file"
+    echo "----------------------------------------"
+    read -p "Enter the path to the file: " file
+    if [ ! -f "$file" ]; then
+        log "ERROR: File not found: $file"
+        read -p "Press Enter to continue..."
+        main_menu
+        return
+    fi
+    read -p "Enter the offset: " offset
+    read -p "Enter the number of bytes: " bytes
+    hexdump -s "$offset" -n "$bytes" -C "$file"
+    read -p "Press Enter to continue..."
+    main_menu
+}
+
+blkid_menu() {
+    clear
+    echo "----------------------------------------"
+    echo " Auto-detect image type (blkid)"
+    echo "----------------------------------------"
+    read -p "Enter the path to the image file: " image_file
+    if [ ! -f "$image_file" ]; then
+        log "ERROR: File not found: $image_file"
+        read -p "Press Enter to continue..."
+        main_menu
+        return
+    fi
+    blkid "$image_file"
+    read -p "Press Enter to continue..."
+    main_menu
+}
+
+create_vbmeta_menu() {
+    clear
+    echo "----------------------------------------"
+    echo " Create vbmeta"
+    echo "----------------------------------------"
+    read -p "Enter the path to the output image file: " output_file
+    read -p "Enter the path to the key file: " key_file
+    read -p "Enter the algorithm (e.g., SHA256_RSA4096): " algorithm
+    read -p "Enter the images to include (e.g., --include_descriptors_from_image boot.img): " include_images
+    python3 "$TOOLS_DIR/avbtool.py" make_vbmeta_image --output "$output_file" --key "$key_file" --algorithm "$algorithm" $include_images
+    log "Created successfully."
+    read -p "Press Enter to continue..."
+    main_menu
+}
+
+unpack_super_menu() {
+    clear
+    echo "----------------------------------------"
+    echo " Unpack super.img"
+    echo "----------------------------------------"
+    read -p "Enter the path to the super.img file: " super_image
+    if [ ! -f "$super_image" ]; then
+        log "ERROR: File not found: $super_image"
+        read -p "Press Enter to continue..."
+        main_menu
+        return
+    fi
+    local output_dir="$OUTPUT_DIR/$(basename "${super_image%.*}")_unpacked"
+    mkdir -p "$output_dir"
+    python3 "$TOOLS_DIR/lpunpack.py" "$super_image" "$output_dir"
+    log "Unpacked successfully."
+    read -p "Press Enter to continue..."
+    main_menu
 }
 
 auto_detect_menu() {
@@ -111,8 +212,10 @@ resign_vbmeta_menu() {
         main_menu
         return
     fi
+    read -p "Enter the algorithm (e.g., SHA256_RSA4096): " algorithm
+    read -p "Enter the images to include (e.g., --include_descriptors_from_image boot.img): " include_images
     read -p "Enter the path to the output image file: " output_file
-    python3 "$TOOLS_DIR/avbtool.py" add_hash_footer --image "$vbmeta_file" --partition_name "vbmeta" --partition_size $(stat -c%s "$vbmeta_file") --key "$key_file" --algorithm SHA256_RSA4096 --output "$output_file"
+    python3 "$TOOLS_DIR/avbtool.py" make_vbmeta_image --output "$output_file" --key "$key_file" --algorithm "$algorithm" $include_images
     log "Resigned successfully."
     read -p "Press Enter to continue..."
     main_menu
