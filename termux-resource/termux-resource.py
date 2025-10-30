@@ -85,6 +85,14 @@ def main():
     twrp_ramdisk_parser.add_argument('--disable-verity', action='store_true', help='Disable dm-verity and verification.')
     twrp_ramdisk_parser.add_argument('--output_file', help='Path to the output file.')
 
+    # TWRP inject-drivers command
+    twrp_inject_drivers_parser = twrp_subparsers.add_parser('inject-drivers', help='Inject touchscreen drivers into a TWRP image.')
+    twrp_inject_drivers_parser.add_argument('stock_image', help='Path to the stock firmware image (e.g., super.img, vendor.img).')
+    twrp_inject_drivers_parser.add_argument('twrp_image', help='Path to the TWRP image to patch.')
+    twrp_inject_drivers_parser.add_argument('output_image', help='Path to the output patched TWRP image.')
+    twrp_inject_drivers_parser.add_argument('--key', help='Path to the key file for signing.')
+    twrp_inject_drivers_parser.add_argument('--algorithm', help='Algorithm to use for signing (e.g., SHA256_RSA4096).')
+
     args = parser.parse_args()
 
     if args.command == 'unpack':
@@ -230,6 +238,31 @@ def main():
     elif args.command == 'twrp':
         if args.twrp_command == 'ramdisk':
             print("TWRP ramdisk customization is not yet implemented.")
+        elif args.twrp_command == 'inject-drivers':
+            from termux_resource.driver_finder import DriverFinder
+            from termux_resource.twrp_patcher import TwrpPatcher
+            from termux_resource.signer.avb import add_hash_footer
+            import os
+
+            finder = DriverFinder(args.stock_image, args.twrp_image)
+            driver_manifest, missing_cmdline_args = finder.find_drivers()
+
+            if not driver_manifest:
+                print("No touchscreen drivers found. Aborting.")
+                return
+
+            patcher = TwrpPatcher(args.twrp_image, driver_manifest, missing_cmdline_args)
+            patched_image_path = patcher.patch_twrp()
+
+            # Re-sign the image
+            if args.key and args.algorithm:
+                print(f"Signing {patched_image_path}...")
+                add_hash_footer(patched_image_path, "boot", os.path.getsize(patched_image_path), args.key, args.algorithm, patched_image_path)
+            else:
+                print("Skipping signing as no key and algorithm were provided.")
+
+            os.rename(patched_image_path, args.output_image)
+            print(f"Patched TWRP image saved to {args.output_image}")
     else:
         parser.print_help()
 
