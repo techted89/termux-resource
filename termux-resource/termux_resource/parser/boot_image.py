@@ -1,6 +1,5 @@
 import os
 from struct import unpack, pack
-
 import subprocess
 
 def create_cpio_archive(directory):
@@ -24,6 +23,15 @@ def create_cpio_archive(directory):
     output = gzip_proc.communicate()[0]
 
     return output
+
+def unpack_ramdisk(ramdisk_path, output_dir):
+    """
+    Unpacks a CPIO archive.
+    """
+    gunzip_proc = subprocess.Popen(['gunzip', '-c', ramdisk_path], stdout=subprocess.PIPE)
+    cpio_proc = subprocess.Popen(['cpio', '-i', '-d'], stdin=gunzip_proc.stdout, cwd=output_dir)
+    gunzip_proc.stdout.close()
+    cpio_proc.wait()
 
 class BootImage:
     def __init__(self, path):
@@ -150,8 +158,3 @@ class BootImage:
             if recovery_dtbo:
                 f.seek(header['recovery_dtbo_offset'])
                 f.write(recovery_dtbo)
-
-def create_cpio_archive(directory):
-    # This is a placeholder. A real implementation would use a library
-    # like `cpio` or `libarchive` to create the CPIO archive.
-    return b''
