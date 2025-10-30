@@ -1,4 +1,0 @@
-# Android image magic file
-0       string  ANDROID!        Android boot image
-0       string  VNDRBOOT        Android vendor boot image
-0       string  AVB0            Android verified boot metadata
