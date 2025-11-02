@@ -92,6 +92,11 @@ def main():
     twrp_inject_drivers_parser.add_argument('output_image', help='Path to the output patched TWRP image.')
     twrp_inject_drivers_parser.add_argument('--key', help='Path to the key file for signing.')
     twrp_inject_drivers_parser.add_argument('--algorithm', help='Algorithm to use for signing (e.g., SHA256_RSA4096).')
+    twrp_inject_drivers_parser.add_argument('--analysis-dir', help='Path to a directory containing live device analysis data.')
+
+    # Analyze device command
+    analyze_device_parser = subparsers.add_parser('analyze-device', help='Analyze a rooted device and extract diagnostic data.')
+    analyze_device_parser.add_argument('output_dir', help='Path to the output directory to save the analysis data.')
 
     args = parser.parse_args()
 
@@ -235,6 +240,10 @@ def main():
         image.parse()
         image.unsparse(args.output_file)
         print(f"Unsparsed {args.image} to {args.output_file}")
+    elif args.command == 'analyze-device':
+        from termux_resource.device_analyzer import DeviceAnalyzer
+        analyzer = DeviceAnalyzer(args.output_dir)
+        analyzer.analyze()
     elif args.command == 'twrp':
         if args.twrp_command == 'ramdisk':
             print("TWRP ramdisk customization is not yet implemented.")
@@ -244,7 +253,7 @@ def main():
             from termux_resource.signer.avb import add_hash_footer
             import os
 
-            finder = DriverFinder(args.stock_image, args.twrp_image)
+            finder = DriverFinder(args.stock_image, args.twrp_image, args.analysis_dir)
             driver_manifest, missing_cmdline_args = finder.find_drivers()
 
             if not driver_manifest:

@@ -54,8 +54,8 @@ class Dtb(KaitaiStruct):
 
     def _read(self):
         self.magic = self._io.read_bytes(4)
-        if not self.magic == b"\\xD0\\x0D\\xFE\\xED":
-            raise kaitaistruct.ValidationNotEqualError(b"\\xD0\\x0D\\xFE\\xED", self.magic, self._io, u"/seq/0")
+        if not self.magic == b"\xD0\x0D\xFE\xED":
+            raise kaitaistruct.ValidationNotEqualError(b"\xD0\x0D\xFE\xED", self.magic, self._io, u"/seq/0")
         self.total_size = self._io.read_u4be()
         self.ofs_structure_block = self._io.read_u4be()
         self.ofs_strings_block = self._io.read_u4be()

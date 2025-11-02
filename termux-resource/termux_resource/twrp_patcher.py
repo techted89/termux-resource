@@ -56,11 +56,9 @@ class TwrpPatcher:
         Injects the driver files into the ramdisk and sets their contexts.
         """
         print("Injecting drivers into ramdisk...")
-        modules_dir = os.path.join(self.unpacked_ramdisk_dir, 'vendor', 'lib', 'modules')
-        os.makedirs(modules_dir, exist_ok=True)
-
         for driver in self.driver_manifest:
-            dest_path = os.path.join(modules_dir, os.path.basename(driver['path']))
+            dest_path = os.path.join(self.unpacked_ramdisk_dir, driver['relative_path'])
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy(driver['path'], dest_path)
             os.chmod(dest_path, 0o644)
             if driver['selinux_context']:
@@ -90,7 +88,9 @@ class TwrpPatcher:
         with open(init_rc_path, 'a') as f:
             f.write('\n\n# Injected by termux-resource for touchscreen drivers\n')
             for driver in self.driver_manifest:
-                f.write(f"insmod /vendor/lib/modules/{os.path.basename(driver['path'])}\n")
+                # The path for insmod should be absolute from the root of the ramdisk
+                insmod_path = os.path.join('/', driver['relative_path'])
+                f.write(f"insmod {insmod_path}\n")
 
     def _repack_twrp(self):
         """
