@@ -1,7 +1,7 @@
 import os
 import tempfile
 import shutil
-from .parser.boot_image import BootImage, unpack_ramdisk, create_cpio_archive
+from parser.boot_image import BootImage, unpack_ramdisk, create_cpio_archive
 
 class TwrpPatcher:
     def __init__(self, twrp_image_path, driver_manifest, missing_cmdline_args):

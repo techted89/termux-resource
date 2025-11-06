@@ -1,5 +1,5 @@
 import os
-from . import adb_helper
+import adb_helper
 
 class DeviceAnalyzer:
     def __init__(self, output_dir):

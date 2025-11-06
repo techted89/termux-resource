@@ -1,9 +1,9 @@
 import os
 import tempfile
-from .parser.dtb import Dtb
+from parser.dtb import Dtb
 from elftools.elf.elffile import ELFFile
 
-from .parser.boot_image import BootImage
+from parser.boot_image import BootImage
 
 class DriverFinder:
     def __init__(self, stock_image_path, twrp_image_path, analysis_dir=None):
@@ -77,8 +77,6 @@ class DriverFinder:
         modules_dep_path = os.path.join(self.analysis_dir, "modules.dep")
         if not os.path.exists(modules_dep_path):
             print("Warning: modules.dep not found in analysis directory. Falling back to manual resolution.")
-            self._unpack_stock_image()
-            self._mount_vendor_image()
             for driver in touchscreen_drivers:
                 # We need to find the full path to the driver
                 found = False
@@ -89,7 +87,6 @@ class DriverFinder:
                         break
                 if not found:
                     print(f"Error: Could not find driver '{driver}.ko' in stock image.")
-            self._cleanup()
             return
 
         dependencies = {}
@@ -103,9 +100,6 @@ class DriverFinder:
 
         drivers_to_add = touchscreen_drivers.copy()
         processed_drivers = set()
-
-        self._unpack_stock_image()
-        self._mount_vendor_image()
 
         while drivers_to_add:
             driver = drivers_to_add.pop(0)
@@ -137,7 +131,7 @@ class DriverFinder:
         """
         print(f"Unpacking {self.stock_image_path} to {self.unpacked_stock_dir}...")
         if 'super' in os.path.basename(self.stock_image_path):
-            from .parser.super_image import SuperImage
+            from parser.super_image import SuperImage
             super_image = SuperImage(self.stock_image_path)
             super_image.unpack(self.unpacked_stock_dir, 'vendor')
             self.vendor_image_path = os.path.join(self.unpacked_stock_dir, 'vendor.img')
